@@ -41,7 +41,7 @@ VIDEOS_DICT = {
 
 # ML Model config
 MODEL_DIR = ROOT / 'weights'
-CLASSIFY_MODEL = MODEL_DIR / 'yolov8n.pt'
+CLASSIFY_MODEL = MODEL_DIR / 'best_model_weights.h5'
 # SEGMENTATION_MODEL = MODEL_DIR / 'yolov8n-seg.pt'
 
 # Webcam

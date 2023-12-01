@@ -14,7 +14,7 @@ from pytube import YouTube
 import settings
 
 
-def load_model(model_path, cls_no = 2):
+def load_model(model_path, cls_no = 5):
     """
     Loads a YOLO object detection model from the specified model_path.
 

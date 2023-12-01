@@ -4,10 +4,12 @@ import PIL
 
 # External packages
 import streamlit as st
-
+from tensorflow.keras.preprocessing import image
+from keras.applications.inception_v3 import preprocess_input
 # Local Modules
 import settings
 import helper
+import numpy as np
 
 # Setting page layout
 st.set_page_config(
@@ -37,7 +39,7 @@ if model_type == 'Classify':
 #     model_path = Path(settings.SEGMENTATION_MODEL)
 
 # Create a list of options for the dropdown
-options = ['Mango', 'Guava', 'Lemon']
+options = ['Guava', 'Mango']
 
 
 # Display the selected option
@@ -46,6 +48,14 @@ st.sidebar.header('Fruits and Flowers')
 # Add a dropdown with text before the selection
 selected_option = st.sidebar.selectbox('Select an Fruit:', options)
 
+if selected_option == 'Mango':
+    cls = ['guava_Disease Free', 'guava_Phytopthora', 'guava_Red rust', 'guava_Scab', 'guava_Styler and Root']
+
+elif selected_option == 'Guava':
+    cls = ['guava_Disease Free', 'guava_Phytopthora', 'guava_Red rust', 'guava_Scab', 'guava_Styler and Root']
+
+# elif selected_option == 'Mango':
+#     cls = ['guava_Disease Free', 'guava_Phytopthora', 'guava_Red rust', 'guava_Scab', 'guava_Styler and Root']
 
 # Load Pre-trained ML Model
 try:
@@ -92,20 +102,27 @@ if source_radio == settings.IMAGE:
 
         else:
             if st.sidebar.button('Detect Objects'):
-                res = model.predict(uploaded_image,
-                                    conf=confidence
-                                    )
-                boxes = res[0].boxes
-                res_plotted = res[0].plot()[:, :, ::-1]
-                st.image(res_plotted, caption='Detected Image',
-                         use_column_width=True)
-                try:
-                    with st.expander("Detection Results"):
-                        for box in boxes:
-                            st.write(box.data)
-                except Exception as ex:
-                    # st.write(ex)
-                    st.write("No image is uploaded yet!")
+
+                img = uploaded_image.resize((256, 256)) 
+                img_array = image.img_to_array(img)
+                img_array = np.expand_dims(img_array, axis=0)
+                img_array /= 255.0 
+
+                res = model.predict(img_array)
+                # boxes = res[0].boxes
+                # res_plotted = res[0].plot()[:, :, ::-1]
+                # st.image(res_plotted, caption='Detected Image',
+                #          use_column_width=True)
+                # try:
+                #     with st.expander("Detection Results"):
+                #         for box in boxes:
+                #             st.write(box.data)
+                # except Exception as ex:
+                #     # st.write(ex)
+                #     st.write("No image is uploaded yet!")
+                predicted_class_index = np.argmax(res)
+                st.header("The Disease is: " + cls[predicted_class_index])
+                st.header("The Confidance is: " + str(res[0][predicted_class_index]))
 
 # elif source_radio == settings.VIDEO:
 #     helper.play_stored_video(confidence, model)
