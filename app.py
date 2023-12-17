@@ -49,11 +49,9 @@ selected_option = st.sidebar.selectbox('Select an Fruit:', Fruits_options)
 
 if model_type == 'Classify':
     model_path = Path(settings.MODEL_DIR / selected_option / 'best_model_weights.h5')
-    print(model_path)
 
 cls = models_name[selected_option]
 
-print(selected_option, len(cls), cls)
 
 try:
     # st.caching.clear_cache()
@@ -105,7 +103,6 @@ if source_radio == settings.IMAGE:
                 img_array /= 255.0 
 
                 res = model.predict(img_array)
-                print(res[0])
                 predicted_class_index = np.argmax(res)
                 st.header("The Disease is: " + cls[predicted_class_index])
                 st.header("The Confidance is: " + str(res[0][predicted_class_index]))
