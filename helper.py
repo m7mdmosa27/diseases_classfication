@@ -14,17 +14,27 @@ from pytube import YouTube
 import settings
 
 
-def load_model(model_path, cls_no = 5):
+def load_model(model_path, model_type='Guava', cls_no=5):
     """
-    Loads a YOLO object detection model from the specified model_path.
+    Loads a CNN classifcation models from the specified model_path.
 
     Parameters:
-        model_path (str): The path to the YOLO model file.
+        model_path (str): The path to the model file.
 
     Returns:
-        A YOLO object detection model.
+        keras model.
     """
     image_size = (256,256)
+    # if model_type=='Guava':
+    #     cls_no = 5
+    # elif model_type=='Mango':
+    #     cls_no = 8
+    # elif model_type=='Lemon':
+    #     cls_no = 2
+    # elif model_type=='Pomegranate':
+    #     cls_no = 2
+    # elif model_type=='Grape':
+    #     cls_no = 4
 
     # Create the base model with pre-trained weights
     base_model = InceptionV3(
@@ -36,18 +46,33 @@ def load_model(model_path, cls_no = 5):
     #     layer.trainable = False
 
     # Add custom classification layers on top of the base model
-    x = base_model.output
-    x = GlobalAveragePooling2D()(x)
-    x = Dense(512, activation='relu')(x)
-    x = LayerNormalization()(x)
-    x = Dropout(0.3)(x)
-    x = Dense(256, activation='relu')(x)
-    x = LayerNormalization()(x)
-    x = Dense(256, activation='relu')(x)
-    x = LayerNormalization()(x)
-    x = Dropout(0.3)(x)
+    if model_type != 'Lemon':
+        x = base_model.output
+        x = GlobalAveragePooling2D()(x)
+        x = Dense(512, activation='relu')(x)
+        x = LayerNormalization()(x)
+        x = Dropout(0.3)(x)
+        x = Dense(256, activation='relu')(x)
+        x = LayerNormalization()(x)
+        x = Dense(256, activation='relu')(x)
+        x = LayerNormalization()(x)
+        x = Dropout(0.3)(x)
+    else:
+        x = base_model.output
+        x = GlobalAveragePooling2D()(x)
+        x = Dense(512, activation='relu')(x)
+        x = LayerNormalization()(x)
+        x = Dropout(0.3)(x)
+        x = Dense(256, activation='relu')(x)
+        x = LayerNormalization()(x)
+        x = Dense(256, activation='relu')(x)
+        x = LayerNormalization()(x)
+        x = Dropout(0.3)(x)
 
-    predictions = Dense(cls_no, activation='softmax')(x)
+    if model_type == 'Lemon' or model_type == 'Pomegranate':
+        predictions = Dense(cls_no, activation='sigmoid')(x)
+    else:
+        predictions = Dense(cls_no, activation='softmax')(x)
 
     loaded_model = Model(inputs=base_model.input, outputs=predictions)
 
@@ -71,7 +96,7 @@ def load_model(model_path, cls_no = 5):
 
     loaded_model.compile(
         optimizer=Adam(learning_rate=0.0001),
-        loss='categorical_crossentropy',
+        loss='binary_crossentropy' if model_type == 'Lemon' or model_type == 'Pomegranate' else 'categorical_crossentropy',
         metrics=['accuracy', f1_m,precision_m, recall_m]
     )
 

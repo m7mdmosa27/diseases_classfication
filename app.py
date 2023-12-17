@@ -5,12 +5,18 @@ import PIL
 # External packages
 import streamlit as st
 from tensorflow.keras.preprocessing import image
-from keras.applications.inception_v3 import preprocess_input
 # Local Modules
 import settings
 import helper
 import numpy as np
+import cv2
 
+models_name = {'Grape': ['Grape__black_measles', 'Grape__black_rot', 'Grape__healthy'],
+                'Guava': ['guava_Disease Free', 'guava_Phytopthora', 'guava_Red rust', 'guava_Scab', 'guava_Styler and Root'],
+                'Lemon': ['Lemon__diseased', 'Lemon__healthy'],
+                'Mango': ['mango_Anthracnose', 'mango_Bacterial Canker','mango_Cutting Weevil', 'mango_Die Back', 
+                        'mango_Gall Midge','mango_Healthy','mango_Powdery Mildew','mango_Sooty Mould'],
+                'Pomegranate': ['Pomegranate__diseased', 'Pomegranate__healthy']}
 # Setting page layout
 st.set_page_config(
     page_title="ML Classification Models For Diseases",
@@ -29,37 +35,31 @@ st.sidebar.header("ML Model Config")
 model_type = st.sidebar.radio(
     "Select Task", ['Classify'])
 
-# confidence = float(st.sidebar.slider(
-#     "Select Model Confidence", 25, 100, 40)) / 100
-
-# Selecting Detection Or Segmentation
-if model_type == 'Classify':
-    model_path = Path(settings.CLASSIFY_MODEL)
-# elif model_type == 'Segmentation':
-#     model_path = Path(settings.SEGMENTATION_MODEL)
 
 # Create a list of options for the dropdown
-options = ['Guava', 'Mango']
+Fruits_options = list(models_name.keys())
 
 
 # Display the selected option
 st.sidebar.header('Fruits and Flowers')
 
 # Add a dropdown with text before the selection
-selected_option = st.sidebar.selectbox('Select an Fruit:', options)
+selected_option = st.sidebar.selectbox('Select an Fruit:', Fruits_options)
 
-if selected_option == 'Mango':
-    cls = ['guava_Disease Free', 'guava_Phytopthora', 'guava_Red rust', 'guava_Scab', 'guava_Styler and Root']
 
-elif selected_option == 'Guava':
-    cls = ['guava_Disease Free', 'guava_Phytopthora', 'guava_Red rust', 'guava_Scab', 'guava_Styler and Root']
+if model_type == 'Classify':
+    model_path = Path(settings.MODEL_DIR / selected_option / 'best_model_weights.h5')
+    print(model_path)
 
-# elif selected_option == 'Mango':
-#     cls = ['guava_Disease Free', 'guava_Phytopthora', 'guava_Red rust', 'guava_Scab', 'guava_Styler and Root']
+cls = models_name[selected_option]
 
-# Load Pre-trained ML Model
+print(selected_option, len(cls), cls)
+
 try:
-    model = helper.load_model(model_path)
+    # st.caching.clear_cache()
+    st.cache_data.clear()
+    model = helper.load_model(model_path,selected_option, len(cls))
+    st.success("Model Loaded successfully!")
 except Exception as ex:
     st.error(f"Unable to load model. Check the specified path: {model_path}")
     st.error(ex)
@@ -94,10 +94,6 @@ if source_radio == settings.IMAGE:
     with col2:
         if source_img is None:
             default_detected_image_path = str(settings.DEFAULT_DETECT_IMAGE)
-            # default_detected_image = PIL.Image.open(
-            #     default_detected_image_path)
-            # st.image(default_detected_image_path, caption='Detected Image',
-            #          use_column_width=True)
             st.header("The Disease is: " + 'Bacterial Canker', )
 
         else:
@@ -109,32 +105,11 @@ if source_radio == settings.IMAGE:
                 img_array /= 255.0 
 
                 res = model.predict(img_array)
-                # boxes = res[0].boxes
-                # res_plotted = res[0].plot()[:, :, ::-1]
-                # st.image(res_plotted, caption='Detected Image',
-                #          use_column_width=True)
-                # try:
-                #     with st.expander("Detection Results"):
-                #         for box in boxes:
-                #             st.write(box.data)
-                # except Exception as ex:
-                #     # st.write(ex)
-                #     st.write("No image is uploaded yet!")
+                print(res[0])
                 predicted_class_index = np.argmax(res)
                 st.header("The Disease is: " + cls[predicted_class_index])
                 st.header("The Confidance is: " + str(res[0][predicted_class_index]))
-
-# elif source_radio == settings.VIDEO:
-#     helper.play_stored_video(confidence, model)
-
-# elif source_radio == settings.WEBCAM:
-#     helper.play_webcam(confidence, model)
-
-# elif source_radio == settings.RTSP:
-#     helper.play_rtsp_stream(confidence, model)
-
-# elif source_radio == settings.YOUTUBE:
-#     helper.play_youtube_video(confidence, model)
+                
 
 else:
     st.error("Please select a valid source type!")
