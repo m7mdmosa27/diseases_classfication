@@ -50,8 +50,10 @@
 
 
 ### Download Weights
-Download all weights from the following Google Drive link and place them in the appropriate directory:
+Download all weights from the following Google Drive link:
 [Google Drive Link](https://drive.google.com/drive/folders/1--0S27oZGIuTxfIa0bsX2XHDAm7KwM-L?usp=sharing)
+
+Create a folder named `weights` and place all the model files from the provided link into this folder.
 
 ## Running the Project
 To launch the project, run the following command in the conda prompt:
